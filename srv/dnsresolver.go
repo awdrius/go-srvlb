@@ -38,7 +38,14 @@ func NewDNSResolverFromResolvFile(defaultTTL uint32, resolvConfFilePath string) 
 
 	servers := make([]string, 0, len(cfg.Servers))
 	for _, s := range cfg.Servers {
-		servers = append(servers, fmt.Sprintf("%s:%s", s, cfg.Port))
+		ip := net.ParseIP(s)
+
+		// handle IPv6
+		if ip != nil && ip.To4() != nil {
+			servers = append(servers, fmt.Sprintf("%s:%s", s, cfg.Port))
+		} else {
+			servers = append(servers, fmt.Sprintf("[%s]:%s", s, cfg.Port))
+		}
 	}
 
 	client := &dns.Client{}
